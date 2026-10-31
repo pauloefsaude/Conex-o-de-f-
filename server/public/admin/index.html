@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Painel · Conexão de Fé</title>
+<style>
+  :root{--navy:#0E1B3D;--navy2:#1B2C5A;--gold:#C9A24B;--paper:#F7F4EE;--ink:#1d2433;--mute:#6b7280;--line:#e5e1d8;--red:#a3261b;--green:#1f7a4d}
+  *{box-sizing:border-box} body{margin:0;font:14px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--paper);color:var(--ink)}
+  header{background:var(--navy);color:#fff;padding:14px 20px;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+  header h1{font:600 18px Georgia,serif;margin:0} header .gold{color:var(--gold)}
+  nav{display:flex;gap:4px;flex-wrap:wrap} nav button{background:transparent;color:#cfd6e6;border:0;padding:8px 12px;border-radius:8px;cursor:pointer;font:inherit}
+  nav button.on{background:var(--navy2);color:#fff} #who{margin-left:auto;font-size:13px;color:#cfd6e6}
+  main{max-width:1100px;margin:0 auto;padding:20px 16px}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:12px}
+  .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px}
+  .k{color:var(--mute);font-size:12px;text-transform:uppercase;letter-spacing:.04em} .v{font:600 26px Georgia,serif;color:var(--navy);margin-top:4px}
+  table{width:100%;border-collapse:collapse;background:#fff;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+  th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);vertical-align:top} th{background:#faf8f3;font-size:12px;color:var(--mute);text-transform:uppercase}
+  button.b{border:0;border-radius:8px;padding:7px 10px;cursor:pointer;font:inherit;margin:2px} .b.p{background:var(--navy);color:#fff}.b.r{background:var(--red);color:#fff}.b.g{background:var(--green);color:#fff}.b.s{background:#ece8df}
+  input,select,textarea{font:inherit;padding:9px 10px;border:1px solid #cfc8b8;border-radius:8px;width:100%}
+  form.row{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:10px;margin-bottom:16px}
+  .login{max-width:360px;margin:60px auto} .err{color:var(--red)} .muted{color:var(--mute)} .snap{background:#fbf6e8;border-left:3px solid var(--gold);padding:6px 10px;margin-top:6px;white-space:pre-wrap}
+  .photos{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px} .photos img{width:100%;aspect-ratio:3/4;object-fit:cover;border-radius:10px;display:block}
+  .bars{display:flex;align-items:flex-end;gap:3px;height:80px;margin-top:10px}.bars div{flex:1;background:var(--navy2);border-radius:3px 3px 0 0;min-height:2px}
+  h2{font:600 18px Georgia,serif;color:var(--navy)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Conexão de Fé <span class="gold">· Painel</span></h1>
+  <nav id="nav" hidden>
+    <button data-t="metrics" class="on">Visão geral</button><button data-t="reports">Denúncias</button>
+    <button data-t="photos">Fotos</button><button data-t="events">Eventos</button>
+    <button data-t="users">Usuários</button><button data-t="audit">Auditoria</button>
+  </nav>
+  <span id="who"></span>
+</header>
+<main id="main"></main>
+<script>
+const $ = (s) => document.querySelector(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"']/g, (c) => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let token = sessionStorage.getItem('cf_admin') || '';
+let me = null;
+
+async function api(path, opts = {}) {
+  const r = await fetch(path, { ...opts, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token }, body: opts.body ? JSON.stringify(opts.body) : undefined });
+  const d = await r.json().catch(() => ({}));
+  if (r.status === 401) { logout(); throw new Error('Sessão expirada'); }
+  if (!r.ok) throw new Error(d.error || 'Erro');
+  return d;
+}
+function logout() { token = ''; sessionStorage.removeItem('cf_admin'); boot(); }
+
+function loginView(msg = '') {
+  $('#nav').hidden = true; $('#who').textContent = '';
+  $('#main').innerHTML = `<div class="card login"><h2>Entrar</h2><p class="muted">Acesso restrito a moderação e administração.</p>
+    <form id="lf"><input id="le" type="email" placeholder="E-mail" required autocomplete="username"><br><br>
+    <input id="lp" type="password" placeholder="Senha" required autocomplete="current-password"><br><br>
+    <button class="b p" style="width:100%">Entrar</button><p class="err" id="lerr">${esc(msg)}</p></form></div>`;
+  $('#lf').onsubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const r = await fetch('/api/auth/login', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: $('#le').value, password: $('#lp').value }) });
+      const d = await r.json(); if (!r.ok) throw new Error(d.error);
+      if (!['admin', 'moderator'].includes(d.me.role)) throw new Error('Esta conta não tem acesso ao painel.');
+      token = d.token; sessionStorage.setItem('cf_admin', token); boot();
+    } catch (err) { $('#lerr').textContent = err.message; }
+  };
+}
+
+async function boot() {
+  if (!token) return loginView();
+  try { me = await api('/api/me'); } catch { return loginView(); }
+  if (!['admin', 'moderator'].includes(me.role)) return loginView('Sem acesso.');
+  $('#nav').hidden = false;
+  $('#who').innerHTML = `${esc(me.email)} · ${me.role === 'admin' ? 'Administrador' : 'Moderador'} · <a href="#" id="out" style="color:var(--gold)">sair</a>`;
+  $('#out').onclick = (e) => { e.preventDefault(); logout(); };
+  document.querySelectorAll('#nav button').forEach((b) => {
+    b.hidden = ['users', 'audit'].includes(b.dataset.t) && me.role !== 'admin';
+    b.onclick = () => { document.querySelectorAll('#nav button').forEach((x) => x.classList.toggle('on', x === b)); show(b.dataset.t); };
+  });
+  show('metrics');
+}
+
+const views = {
+  async metrics() {
+    const m = await api('/api/admin/metrics');
+    const tiles = [['Usuários', m.usersTotal], ['Novos (7d)', m.usersNew7d], ['Ativos (7d)', m.usersActive7d], ['Combinações', m.matchesTotal],
+      ['Conversas iniciadas', m.conversationsStarted], ['Denúncias abertas', m.reportsOpen], ['Em revisão', m.usersUnderReview],
+      ['Mensagens sinalizadas (7d)', m.messagesFlagged7d], ['Premium ativos', m.premiumActive], ['Conversão', m.conversionRate + '%'],
+      ['Retenção D7', m.retentionD7 == null ? '—' : m.retentionD7 + '%'], ['Receita', '—']];
+    const max = Math.max(1, ...m.signupsByDay.map((d) => d.n));
+    return `<div class="grid">${tiles.map(([k, v]) => `<div class="card"><div class="k">${k}</div><div class="v">${esc(v)}</div></div>`).join('')}</div>
+      <div class="card" style="margin-top:12px"><div class="k">Cadastros por dia (30 dias)</div>
+      <div class="bars">${m.signupsByDay.map((d) => `<div title="${esc(d.day)}: ${d.n}" style="height:${d.n / max * 100}%"></div>`).join('') || '<span class="muted">Sem dados ainda.</span>'}</div></div>
+      <p class="muted">${esc(m.revenueNote)}</p>`;
+  },
+  async reports() {
+    const { reports } = await api('/api/admin/reports?status=open');
+    if (!reports.length) return '<h2>Denúncias</h2><p class="muted">Nenhuma denúncia aberta. 🙏</p>';
+    return `<h2>Denúncias abertas</h2><p class="muted">Você vê apenas a mensagem denunciada, nunca a conversa inteira.</p><table><tr><th>Quando</th><th>Motivo</th><th>Pessoa denunciada</th><th>Ações</th></tr>
+      ${reports.map((r) => `<tr><td>${esc(r.createdAt)}</td><td><b>${esc(r.reason.replace(/_/g, ' '))}</b><div>${esc(r.details)}</div>${r.messageSnapshot ? `<div class="snap">${esc(r.messageSnapshot)}</div>` : ''}</td>
+      <td>${r.reported ? `${esc(r.reported.name || '—')}<div class="muted">${esc(r.reported.email || '')} · status: ${esc(r.reported.status)} · ${r.reported.totalReports} denúncia(s)</div>` : '<span class="muted">conta excluída</span>'}</td>
+      <td><button class="b s" data-a="dismiss" data-id="${r.id}">Arquivar</button><button class="b g" data-a="restore" data-id="${r.id}">Manter ativo</button><button class="b r" data-a="suspend" data-id="${r.id}">Suspender</button></td></tr>`).join('')}</table>`;
+  },
+  async photos() {
+    const { photos } = await api('/api/admin/photos/pending');
+    if (!photos.length) return '<h2>Fotos pendentes</h2><p class="muted">Nada para revisar.</p>';
+    return `<h2>Fotos pendentes</h2><div class="photos">${photos.map((p) => `<div class="card" style="padding:8px"><img src="${esc(p.url)}" alt=""><div class="muted">${esc(p.name || '')}</div>
+      <button class="b g" data-ph="approved" data-id="${esc(p.id)}">Aprovar</button><button class="b r" data-ph="rejected" data-id="${esc(p.id)}">Recusar</button></div>`).join('')}</div>`;
+  },
+  async events() {
+    return `<h2>Novo evento</h2><form class="row card" id="ef">
+      <input name="title" placeholder="Título" required><select name="kind">${['Encontro de solteiros','Evento de igreja','Congresso','Atividade social','Estudo bíblico','Convivência'].map((k) => `<option>${k}</option>`).join('')}</select>
+      <input name="startsAt" type="datetime-local" required><input name="city" placeholder="Cidade (opcional)"><input name="location" placeholder="Local (opcional)"><input name="onlineUrl" placeholder="Link https:// (opcional)">
+      <textarea name="description" placeholder="Descrição" required style="grid-column:1/-1"></textarea><button class="b p">Publicar evento</button><span class="err" id="eerr"></span></form>
+      <p class="muted">A participação é opcional e a lista de quem vai nunca é exibida — só a contagem.</p>`;
+  },
+  async users() {
+    const { users } = await api('/api/admin/users?q=' + encodeURIComponent($('#uq')?.value || ''));
+    return `<h2>Usuários</h2><input id="uq" placeholder="Buscar por e-mail ou nome" style="max-width:320px;margin-bottom:10px"><table><tr><th>Nome</th><th>E-mail</th><th>Cidade</th><th>Papel</th><th>Status</th><th>Ações</th></tr>
+      ${users.map((u) => `<tr><td>${esc(u.display_name || '—')}</td><td>${esc(u.email)}</td><td>${esc(u.city || '')}</td><td>${esc(u.role)}</td><td>${esc(u.status)}</td>
+      <td>${u.id === me.id ? '<span class="muted">você</span>' : `<button class="b s" data-u="${u.id}" data-st="active">Ativar</button><button class="b r" data-u="${u.id}" data-st="suspended">Suspender</button>`}</td></tr>`).join('')}</table>`;
+  },
+  async audit() {
+    const { entries } = await api('/api/admin/audit');
+    return `<h2>Registro de ações</h2><table><tr><th>Quando</th><th>Ação</th><th>Quem</th><th>Alvo</th></tr>${entries.map((e) => `<tr><td>${esc(e.created_at)}</td><td>${esc(e.action)}</td><td>${esc(e.actor_id || 'sistema')}</td><td>${esc(e.target || '')}</td></tr>`).join('')}</table>`;
+  },
+};
+
+async function show(t) {
+  try { $('#main').innerHTML = await views[t](); } catch (e) { $('#main').innerHTML = `<p class="err">${esc(e.message)}</p>`; return; }
+  $('#main').querySelectorAll('[data-a]').forEach((b) => b.onclick = async () => {
+    const note = b.dataset.a === 'suspend' ? prompt('Motivo da suspensão (fica no registro):') : '';
+    if (note === null) return;
+    await api(`/api/admin/reports/${b.dataset.id}/resolve`, { method: 'POST', body: { action: b.dataset.a, note } }); show('reports');
+  });
+  $('#main').querySelectorAll('[data-ph]').forEach((b) => b.onclick = async () => { await api(`/api/admin/photos/${b.dataset.id}`, { method: 'POST', body: { status: b.dataset.ph } }); show('photos'); });
+  $('#main').querySelectorAll('[data-u]').forEach((b) => b.onclick = async () => { await api(`/api/admin/users/${b.dataset.u}`, { method: 'POST', body: { status: b.dataset.st } }); show('users'); });
+  const uq = $('#uq'); if (uq) uq.onchange = () => show('users');
+  const ef = $('#ef'); if (ef) ef.onsubmit = async (e) => {
+    e.preventDefault(); const f = Object.fromEntries(new FormData(ef));
+    try { await api('/api/admin/events', { method: 'POST', body: { ...f, startsAt: new Date(f.startsAt).toISOString() } }); ef.reset(); $('#eerr').textContent = 'Evento publicado.'; }
+    catch (err) { $('#eerr').textContent = err.message; }
+  };
+}
+boot();
+</script>
+</body>
+</html>

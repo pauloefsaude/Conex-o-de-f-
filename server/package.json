@@ -1,0 +1,18 @@
+{
+  "name": "conexao-de-fe-server",
+  "version": "0.1.0",
+  "private": true,
+  "description": "API do Conexão de Fé — sem dependências externas (Node 22+).",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5"
+  },
+  "scripts": {
+    "start": "node --no-warnings src/index.js",
+    "dev": "node --no-warnings --watch src/index.js",
+    "seed": "node --no-warnings src/seed.js",
+    "create-admin": "node --no-warnings src/create-admin.js",
+    "test": "node --no-warnings --test test/*.test.js",
+    "build:web": "node web-src/build.js"
+  }
+}

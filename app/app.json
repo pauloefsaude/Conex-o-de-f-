@@ -1,0 +1,30 @@
+{
+  "expo": {
+    "name": "Conexão de Fé",
+    "slug": "conexao-de-fe",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#0E1B3D",
+    "icon": "./assets/icon.png",
+    "splash": { "image": "./assets/icon.png", "resizeMode": "contain", "backgroundColor": "#0E1B3D" },
+    "ios": {
+      "bundleIdentifier": "br.com.conexaodefe.app",
+      "supportsTablet": false,
+      "infoPlist": {
+        "NSPhotoLibraryUsageDescription": "Usamos suas fotos apenas para você escolher as imagens do seu perfil.",
+        "NSCameraUsageDescription": "Usamos a câmera apenas se você quiser tirar uma foto para o perfil."
+      }
+    },
+    "android": {
+      "package": "br.com.conexaodefe.app",
+      "adaptiveIcon": { "foregroundImage": "./assets/icon.png", "backgroundColor": "#0E1B3D" },
+      "permissions": []
+    },
+    "plugins": [
+      ["expo-image-picker", { "photosPermission": "Usamos suas fotos apenas para você escolher as imagens do seu perfil." }],
+      "expo-secure-store"
+    ],
+    "extra": { "apiUrl": "http://localhost:4000" }
+  }
+}

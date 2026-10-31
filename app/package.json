@@ -1,0 +1,25 @@
+{
+  "name": "conexao-de-fe-app",
+  "version": "0.1.0",
+  "private": true,
+  "main": "expo/AppEntry.js",
+  "scripts": {
+    "setup": "npm install && npx expo install expo@latest && npx expo install --fix",
+    "start": "expo start",
+    "android": "expo start --android",
+    "ios": "expo start --ios"
+  },
+  "dependencies": {
+    "expo": "~53.0.0",
+    "expo-constants": "~17.1.6",
+    "expo-image-picker": "~16.1.4",
+    "expo-secure-store": "~14.2.3",
+    "expo-status-bar": "~2.2.3",
+    "react": "19.0.0",
+    "react-native": "0.79.2",
+    "react-native-safe-area-context": "5.4.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.25.0"
+  }
+}

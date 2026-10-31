@@ -1,0 +1,422 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0E1B3D">
+<meta name="description" content="Aplicativo de relacionamento cristão. Dois corações, uma fé, um propósito.">
+<title>Conexão de Fé</title>
+<link rel="manifest" href="/static/manifest.webmanifest">
+<link rel="icon" href="/static/icon-192.png">
+<link rel="apple-touch-icon" href="/static/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Young+Serif&family=Figtree:wght@400;500;600;700&display=swap">
+<style>
+:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);color-scheme:light}
+body{margin:0} img{max-width:100%} [hidden]{display:none!important}
+/*BASE_CSS*/
+/* ---- Visual de app de namoro: cartão em tela cheia ---- */
+.top{padding-block:8px}
+.view-discover .main{padding-bottom:0}
+.deck{position:relative;height:calc(100dvh - 158px - env(safe-area-inset-top,0px) - env(safe-area-inset-bottom,0px));min-height:440px;max-height:780px}
+.deck .card{border-radius:20px;box-shadow:0 14px 40px rgba(6,13,34,.35)}
+.deck .card.back{transform:scale(.96) translateY(8px);opacity:.55}
+.bars{position:absolute;top:8px;left:10px;right:10px;display:flex;gap:4px;z-index:3}
+.bars i{flex:1;height:3px;border-radius:2px;background:rgba(255,255,255,.35)}
+.bars i.on{background:#fff}
+.card .info{padding:18px 18px 92px}
+.card .shade{height:70%;background:linear-gradient(transparent 0%,rgba(6,11,28,.55) 35%,rgba(6,11,28,.95) 100%)}
+.card .name{font-size:32px}
+.card .more{position:absolute;right:16px;bottom:96px;width:36px;height:36px;border-radius:50%;border:1.5px solid rgba(255,255,255,.7);background:rgba(255,255,255,.12);color:#fff;font-size:18px;cursor:pointer;z-index:3}
+.deck .actions{position:absolute;left:0;right:0;bottom:14px;margin:0;z-index:4;gap:16px;pointer-events:none}
+.deck .actions button{pointer-events:auto}
+.deck .round{background:rgba(255,255,255,.96);border:0;box-shadow:0 6px 18px rgba(0,0,0,.28);color:#1C2D5C}
+.deck .round.pass{color:#B23A48;font-size:26px}
+.deck .round.gold{background:linear-gradient(145deg,#E2BE68,#B88A2E);color:#fff;width:70px;height:70px;font-size:30px}
+.deck .round.sm{color:#1C2D5C}
+.deck .round:active{transform:scale(.92)}
+.tab .tl{display:none}
+.tab{padding:13px 0 12px}
+.tab svg{width:26px;height:26px}
+.newrow{display:flex;gap:14px;overflow-x:auto;padding:6px 2px 14px;margin:0 0 6px;scrollbar-width:none}
+.newrow::-webkit-scrollbar{display:none}
+.newm{flex:none;width:76px;text-align:center;background:none;border:0;cursor:pointer;color:var(--ink);font-size:13px;font-weight:600}
+.newm .ring{width:72px;height:72px;border-radius:50%;padding:3px;background:linear-gradient(145deg,#E2BE68,#B88A2E);margin:0 auto 6px}
+.newm .ring .av{width:66px!important;height:66px!important;border:3px solid var(--bg)}
+.newm span{display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.likes-tile{flex:none;width:76px;text-align:center;font-size:13px;font-weight:600}
+.likes-tile .ring{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;margin:0 auto 6px;background:var(--navy2);color:#E5C06A;font-family:var(--display);font-size:24px}
+.item>.av{flex:none}
+.section-t{font-size:13px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);margin:10px 0 6px}
+
+.authhero{background:var(--navy);color:var(--on-navy);border-radius:24px;padding:28px 22px;margin:8px 0 18px}
+.authhero h1{color:var(--on-navy)} .authhero p{color:#C9D0E2}
+.dots{display:flex;gap:8px;margin-top:16px}.dots span{width:8px;height:8px;border-radius:4px;background:#3A4C80}.dots span.on{width:26px;background:#D8B259}
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="top">
+    <div class="brand"><svg width="34" height="24" viewBox="0 0 68 48" aria-hidden="true"><circle cx="24" cy="24" r="17" fill="none" stroke="currentColor" stroke-width="4.5"/><circle cx="44" cy="24" r="17" fill="none" stroke="#C99A3B" stroke-width="4.5"/><rect x="32.2" y="14" width="3.6" height="20" rx="1.8" fill="#C99A3B"/><rect x="28.5" y="19" width="11" height="3.4" rx="1.7" fill="#C99A3B"/></svg>Conexão de Fé</div>
+    <div id="topRight"></div>
+  </header>
+  <main class="main" id="main"><div class="splash"><div><h1>Dois corações, uma fé, um propósito.</h1><p class="mute">Carregando…</p></div></div></main>
+</div>
+<nav class="tabs" id="tabs" hidden><div id="tabsInner"></div></nav>
+<div id="overlay"></div>
+<noscript>Ative o JavaScript para usar o Conexão de Fé.</noscript>
+<script>
+(() => {
+const $=(s,r=document)=>r.querySelector(s);
+const esc=(s)=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const initials=(n)=>(n||"?").split(" ").map(p=>p[0]).slice(0,2).join("").toUpperCase();
+const avatar=(name,url,size=52)=>url?`<img class="av" style="width:${size}px;height:${size}px" src="${esc(url)}" alt="">`:`<div class="av" style="width:${size}px;height:${size}px;font-size:${size*.42}px">${esc(initials(name))}</div>`;
+const dt=(s)=>new Date(String(s).replace(" ","T")+"Z");
+const REASONS=[["perfil_falso","Perfil falso"],["golpe_dinheiro","Pedido de dinheiro ou golpe"],["assedio","Assédio ou desrespeito"],["conteudo_improprio","Conteúdo impróprio"],["discriminacao","Discriminação"],["menor_de_idade","Parece ser menor de 18 anos"],["spam","Spam ou propaganda"],["outro","Outro motivo"]];
+const ICONS={discover:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 17h6"/></svg>',
+ chats:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 5h16v11H9l-5 4z"/></svg>',
+ insp:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v18M7 8h10"/></svg>',
+ events:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>',
+ me:'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="8" r="4"/><path d="M4 21c1.5-4 4.5-6 8-6s6.5 2 8 6"/></svg>'};
+
+// ---------- Sessão e API ----------
+const store={get(){try{return localStorage.getItem("cf_token")}catch{return null}},set(t){try{localStorage.setItem("cf_token",t)}catch{}},clear(){try{localStorage.removeItem("cf_token")}catch{}}};
+const S={token:store.get(),me:null,opt:null,view:"loading",queue:null,matchId:null,unread:0,ws:null};
+async function api(path,{method="GET",body}={}){let r;
+ try{r=await fetch(path,{method,headers:{"Content-Type":"application/json",...(S.token?{Authorization:"Bearer "+S.token}:{})},body:body?JSON.stringify(body):undefined});}
+ catch{throw Object.assign(new Error("Sem conexão. Verifique sua internet e tente de novo."),{code:"network"});}
+ const d=await r.json().catch(()=>({}));
+ if(r.status===401&&S.token){logout(true);}
+ if(!r.ok)throw Object.assign(new Error(d.error||"Algo deu errado. Tente novamente."),{status:r.status,code:d.code});
+ return d;}
+function toast(msg){const t=document.createElement("div");t.setAttribute("role","status");t.textContent=msg;Object.assign(t.style,{position:"fixed",left:"50%",bottom:"calc(90px + env(safe-area-inset-bottom,0px))",transform:"translateX(-50%)",background:"var(--ink)",color:"var(--bg)",padding:"10px 16px",borderRadius:"12px",zIndex:50,maxWidth:"90vw",fontSize:"14px"});document.body.appendChild(t);setTimeout(()=>t.remove(),3800);}
+function logout(expired){store.clear();S.token=null;S.me=null;S.ws?.close();S.ws=null;go(expired?"login":"intro",{expired});}
+async function enter(token){if(token){S.token=token;store.set(token);}S.me=await api("/api/me");connectWs();
+ go(S.me.profile?.complete?"discover":"edit",{onboarding:!S.me.profile?.complete});}
+function connectWs(){if(!S.token||S.ws)return;let retry=1000;
+ const open=()=>{if(!S.token)return;const ws=new WebSocket(`${location.protocol==="https:"?"wss":"ws"}://${location.host}/ws?token=${encodeURIComponent(S.token)}`);S.ws=ws;
+  ws.onmessage=(e)=>{let ev;try{ev=JSON.parse(e.data)}catch{return}onEvent(ev);};
+  ws.onopen=()=>{retry=1000;};ws.onclose=()=>{if(S.ws===ws&&S.token){S.ws=null;setTimeout(()=>{if(!S.ws)open();},retry=Math.min(retry*2,30000));}};};
+ open();}
+function onEvent(ev){
+ if(ev.type==="notification"){S.unread++;renderTabs();if(ev.kind==="match"&&S.view!=="chat"&&!$("#overlay").innerHTML&&Date.now()-(S.likedAt||0)>5000)toast(`Vocês se curtiram: você e ${ev.data.name}!`);}
+ if(ev.type==="message"&&S.view==="chat"&&S.matchId===ev.matchId){appendMsg(ev.message);api(`/api/matches/${S.matchId}/read`,{method:"POST",body:{}}).catch(()=>{});}
+ else if(ev.type==="message"&&S.view==="chats")render();
+ if(ev.type==="unmatched"&&S.view==="chat"&&S.matchId===ev.matchId)renderMain(`<div class="notice">Esta conversa foi encerrada.</div><button class="btn" id="bk">Voltar</button>`,()=>$("#bk").onclick=()=>go("chats"));}
+
+// ---------- Navegação ----------
+function renderMain(html,after){$("#main").innerHTML=html;window.scrollTo(0,0);after&&after();}
+function go(v,extra={}){Object.assign(S,extra);S.view=v;render();}
+const NOTAB=["loading","intro","register","login","forgot","edit-onboarding"];
+function renderTabs(){const show=S.me&&S.me.profile?.complete&&!NOTAB.includes(S.view)&&S.view!=="chat"&&!(S.view==="edit"&&S.onboarding);
+ $("#tabs").hidden=!show;if(!show)return;
+ const cur={profile:S.from||"discover",prefs:"me",privacy:"me",blocked:"me",delete:"me",premium:"me",notifications:"discover",edit:"me"}[S.view]||S.view;
+ $("#tabsInner").innerHTML=[["discover","Descobrir"],["chats","Conversas"],["events","Eventos"],["insp","Inspiração"],["me","Perfil"]]
+  .map(([k,l])=>`<button class="tab" data-tab="${k}" aria-label="${l}" title="${l}" ${cur===k?'aria-current="page"':""}>${ICONS[k]}<span class="tl">${l}</span>${k==="chats"&&S.unread?'<span class="dot"></span>':""}</button>`).join("");}
+$("#tabs").addEventListener("click",e=>{const b=e.target.closest("[data-tab]");if(b)go(b.dataset.tab);});
+const VIEWS={};
+function render(){document.body.className="view-"+S.view;$("#topRight").innerHTML="";closeSheet();const V=VIEWS[S.view];if(V)V();renderTabs();}
+function sheet(html){$("#overlay").innerHTML=`<div class="sheet-bg" id="sbg"><div class="sheet" role="dialog">${html}</div></div>`;$("#sbg").addEventListener("click",e=>{if(e.target.id==="sbg"||e.target.closest("[data-close]"))closeSheet();});}
+function closeSheet(){$("#overlay").innerHTML="";}
+const back=(to)=>`<button class="chip" id="bk" style="margin-bottom:12px" onclick="">‹ Voltar</button>`;
+function wireBack(to){const b=$("#bk");if(b)b.onclick=()=>go(to);}
+function busy(btn,fn){return async()=>{btn.disabled=true;try{await fn();}catch(e){const er=$("#err");if(er)er.textContent=e.message;else toast(e.message);}finally{if(btn.isConnected)btn.disabled=false;}};}
+
+// ---------- Entrada ----------
+const SLIDES=[["Conheça pessoas que compartilham sua fé","Católicos e evangélicos de várias tradições, buscando amizade, namoro sério ou casamento."],
+ ["Afinidade que você entende","Mostramos por que alguém foi sugerido: objetivos, valores e interesses em comum. Sem promessas mágicas."],
+ ["Segurança em primeiro lugar","A conversa só abre com curtida mútua. Bloqueio imediato, denúncia simples e alertas contra golpes."]];
+VIEWS.intro=()=>{let i=S.slide||0;const s=SLIDES[i];
+ renderMain(`<div class="authhero"><h1>${esc(s[0])}</h1><p>${esc(s[1])}</p><div class="dots">${SLIDES.map((_,k)=>`<span class="${k===i?"on":""}"></span>`).join("")}</div></div>
+ ${i<SLIDES.length-1?'<button class="btn ghost" id="nx">Continuar</button>':""}<button class="btn gold" id="rg">Criar minha conta</button><button class="btn ghost" id="lg">Já tenho conta</button>
+ <p class="small mute" style="text-align:center;margin-top:12px">Exclusivo para maiores de 18 anos · <a href="/termos" style="color:inherit">Termos e privacidade</a></p>`);
+ const n=$("#nx");if(n)n.onclick=()=>{S.slide=i+1;render();};$("#rg").onclick=()=>go("register");$("#lg").onclick=()=>go("login");};
+const ageOf=(iso)=>{const b=new Date(iso+"T00:00:00");const n=new Date();let a=n.getFullYear()-b.getFullYear();if(n<new Date(n.getFullYear(),b.getMonth(),b.getDate()))a--;return a;};
+VIEWS.register=()=>{renderMain(`${back()}<h1>Criar conta</h1>
+ <label class="label" for="birth">Data de nascimento</label><input class="input" id="birth" type="date" max="${new Date().toISOString().slice(0,10)}">
+ <p class="small mute" style="margin-top:6px">Usada só para confirmar que você tem 18 anos ou mais. No perfil aparece apenas a idade.</p>
+ <label class="label" for="em">E-mail</label><input class="input" id="em" type="email" autocomplete="email">
+ <label class="label" for="pw">Senha</label><input class="input" id="pw" type="password" autocomplete="new-password"><p class="small mute" style="margin-top:6px">Mínimo de 8 caracteres, com letras e números.</p>
+ <label class="check"><input type="checkbox" id="t1"><span>Li e aceito os <a href="/termos" target="_blank" style="color:inherit">Termos de Uso e a Política de Privacidade</a>.</span></label>
+ <label class="check"><input type="checkbox" id="t2"><span>Autorizo o uso das minhas informações religiosas. São dados sensíveis pela LGPD: eu escolho o que fica visível e posso apagar tudo quando quiser.</span></label>
+ <div class="err" id="err"></div><button class="btn" id="go">Criar conta</button>`);wireBack("intro");
+ const b=$("#go");b.onclick=busy(b,async()=>{$("#err").textContent="";const birth=$("#birth").value;
+  if(!birth)throw new Error("Informe sua data de nascimento.");if(ageOf(birth)<18)throw new Error("O Conexão de Fé é exclusivo para maiores de 18 anos.");
+  const r=await api("/api/auth/register",{method:"POST",body:{email:$("#em").value,password:$("#pw").value,birthdate:birth,acceptTerms:$("#t1").checked,acceptPrivacy:$("#t1").checked,acceptSensitiveData:$("#t2").checked}});
+  await enter(r.token);});};
+VIEWS.login=()=>{renderMain(`${back()}<h1>Que bom ver você de novo</h1>${S.expired?'<div class="notice">Sua sessão expirou. Entre novamente.</div>':""}
+ <label class="label" for="em">E-mail</label><input class="input" id="em" type="email" autocomplete="email">
+ <label class="label" for="pw">Senha</label><input class="input" id="pw" type="password" autocomplete="current-password">
+ <div class="err" id="err"></div><button class="btn" id="go">Entrar</button><button class="btn ghost" id="fg">Esqueci minha senha</button>`);wireBack("intro");
+ const b=$("#go");b.onclick=busy(b,async()=>{const r=await api("/api/auth/login",{method:"POST",body:{email:$("#em").value,password:$("#pw").value}});S.expired=false;await enter(r.token);});
+ $("#pw").addEventListener("keydown",e=>{if(e.key==="Enter")b.click();});$("#fg").onclick=()=>go("forgot");};
+VIEWS.forgot=()=>{renderMain(`${back()}<h1>Recuperar senha</h1><p>Informe seu e-mail. Se houver uma conta, enviaremos um link para criar uma nova senha.</p>
+ <label class="label" for="em">E-mail</label><input class="input" id="em" type="email"><div class="err" id="err"></div><button class="btn" id="go">Enviar link</button>`);wireBack("login");
+ const b=$("#go");b.onclick=busy(b,async()=>{const r=await api("/api/auth/forgot-password",{method:"POST",body:{email:$("#em").value}});renderMain(`<div class="notice">${esc(r.message)}</div><button class="btn" id="bk">Voltar ao login</button>`,()=>$("#bk").onclick=()=>go("login"));});};
+
+// ---------- Perfil (criação e edição) ----------
+function chipGroup(id,opts,sel,multi,max,labels){const s=multi?(sel||[]):[sel];
+ return `<div class="chips" data-group="${id}" data-multi="${multi?1:0}" data-max="${max||0}">${opts.map((o,i)=>`<button type="button" class="chip" aria-pressed="${s.includes(o)}" data-v="${esc(o)}">${esc(labels?labels[i]:o)}</button>`).join("")}</div>`;}
+function readGroup(id){const g=$(`[data-group="${id}"]`);const v=[...g.querySelectorAll('[aria-pressed="true"]')].map(b=>b.dataset.v);return g.dataset.multi==="1"?v:(v[0]||null);}
+document.addEventListener("click",e=>{const c=e.target.closest("[data-group] .chip");if(!c)return;const g=c.parentElement;const on=c.getAttribute("aria-pressed")==="true";
+ if(g.dataset.multi==="1"){const max=+g.dataset.max;if(!on&&max&&g.querySelectorAll('[aria-pressed="true"]').length>=max)return toast(`Escolha até ${max}.`);c.setAttribute("aria-pressed",String(!on));}
+ else{g.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed","false"));c.setAttribute("aria-pressed",String(!on));}});
+function shrink(file){return new Promise((res,rej)=>{const img=new Image();const url=URL.createObjectURL(file);img.onload=()=>{const W=900,H=1200;const c=document.createElement("canvas");c.width=W;c.height=H;const x=c.getContext("2d");
+ const r=Math.max(W/img.width,H/img.height);const w=img.width*r,h=img.height*r;x.drawImage(img,(W-w)/2,(H-h)/2,w,h);URL.revokeObjectURL(url);res(c.toDataURL("image/jpeg",0.8));};img.onerror=rej;img.src=url;});}
+VIEWS.edit=()=>{const o=S.opt,p=S.me.profile||{},first=S.onboarding;const vis=p.visibility||{};
+ renderMain(`${first?'<h1>Monte seu perfil</h1><p class="mute">Só nome, gênero, quem você quer conhecer e cidade são obrigatórios.</p>':`${back()}<h1>Editar perfil</h1>`}
+ <h2>Fotos</h2><p class="small mute">Até 6 fotos recentes, com o rosto visível. Elas passam por moderação.</p><div class="photos" id="photos"></div><input type="file" id="pfile" accept="image/*" hidden>
+ <h2>Sobre você</h2>
+ <label class="label" for="pname">Nome de exibição</label><input class="input" id="pname" maxlength="40" value="${esc(p.displayName||"")}">
+ <span class="label">Eu sou</span>${chipGroup("gender",["man","woman"],p.gender,false,0,["Homem","Mulher"])}
+ <span class="label">Quero conhecer</span>${chipGroup("seeking",["man","woman"],p.seeking,false,0,["Homens","Mulheres"])}
+ <label class="label" for="pcity">Cidade</label><select class="input" id="pcity"><option value="">Escolha</option>${o.cities.slice().sort((a,b)=>a.name.localeCompare(b.name)).map(c=>`<option value="${c.key}" ${p.cityKey===c.key?"selected":""}>${esc(c.name)} – ${c.uf}</option>`).join("")}</select>
+ <p class="small mute" style="margin-top:6px">Mostramos a cidade e uma faixa de distância, nunca sua localização exata.</p>
+ <label class="label" for="pbio">Biografia</label><textarea class="input" id="pbio" maxlength="500" placeholder="Conte o que você faz, do que gosta e o que procura.">${esc(p.bio||"")}</textarea>
+ <button class="btn ghost" id="tips" type="button">Sugestões para minha biografia</button><div id="tipsOut"></div>
+ <h2>Relacionamento</h2>
+ <span class="label">O que você procura</span>${chipGroup("goal",o.relationshipGoals,p.relationshipGoal)}
+ <span class="label">Filhos</span>${chipGroup("kids",o.wantsChildren,p.wantsChildren)}
+ <span class="label">Valores importantes (até 5)</span>${chipGroup("values",o.values,p.values,true,5)}
+ <span class="label">Interesses e hobbies (até 10)</span>${chipGroup("interests",o.interests,p.interests,true,10)}
+ <label class="label" for="pfut">Expectativas para o futuro</label><textarea class="input" id="pfut" maxlength="300">${esc(p.future||"")}</textarea>
+ <h2>Fé</h2><div class="notice">Opcional. Por padrão, essas informações ficam ocultas.</div>
+ <span class="label">Denominação ou tradição</span>${chipGroup("den",o.denominations,p.denomination)}
+ <label class="check"><input type="checkbox" id="vden" ${vis.denomination?"checked":""}><span>Mostrar minha denominação no perfil</span></label>
+ <span class="label">Participação em atividades da igreja</span>${chipGroup("freq",o.churchFrequency,p.churchFrequency)}
+ <label class="check"><input type="checkbox" id="vfreq" ${vis.church_frequency?"checked":""}><span>Mostrar no perfil</span></label>
+ <span class="label">Importância da oração na rotina (1 a 5)</span>${chipGroup("prayer",["1","2","3","4","5"],p.prayerImportance?String(p.prayerImportance):null)}
+ <label class="check"><input type="checkbox" id="vpr" ${vis.prayer_importance?"checked":""}><span>Mostrar no perfil</span></label>
+ <label class="label" for="pverse">Versículo favorito (referência)</label><input class="input" id="pverse" maxlength="200" placeholder="Ex.: Salmos 23" value="${esc(p.favoriteVerse||"")}">
+ <h2>Perguntas para se conhecer</h2><p class="small mute">Responda até 3, se quiser.</p>
+ ${o.questions.map((q,i)=>`<label class="label" for="q${i}" style="text-transform:none;letter-spacing:0;font-size:14px;color:var(--ink)">${esc(q)}</label><textarea class="input qa" id="q${i}" data-q="${esc(q)}" maxlength="300" style="min-height:60px">${esc((p.answers||[]).find(a=>a.q===q)?.a||"")}</textarea>`).join("")}
+ <div class="err" id="err"></div><button class="btn" id="save">${first?"Continuar":"Salvar"}</button>`);
+ if(!first)wireBack("me");
+ drawPhotos();
+ $("#pfile").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)return;try{const data=await shrink(f);const r=await api("/api/me/photos",{method:"POST",body:{data}});S.me.profile.photos=r.photos;drawPhotos();}catch(er){toast(er.message||"Não foi possível usar esta imagem.");}};
+ $("#tips").onclick=async()=>{try{const r=await api("/api/ai/bio-suggestions",{method:"POST",body:{}});$("#tipsOut").innerHTML=`<div class="panel">${r.tips.map(t=>`<p>• ${esc(t)}</p>`).join("")}${r.example?`<p class="mute"><i>Exemplo: ${esc(r.example)}</i></p>`:""}<p class="small mute">${r.source==="ia"?"Sugestões geradas por IA com base no que você salvou. Revise antes de usar.":"Dicas gerais."}</p></div>`;}catch(e){toast(e.message);}};
+ const b=$("#save");b.onclick=busy(b,async()=>{
+  const answers=[...document.querySelectorAll(".qa")].map(t=>({q:t.dataset.q,a:t.value.trim()})).filter(a=>a.a);
+  if(answers.length>3)throw new Error("Responda no máximo 3 perguntas.");
+  const body={displayName:$("#pname").value,gender:readGroup("gender"),seeking:readGroup("seeking"),bio:$("#pbio").value,relationshipGoal:readGroup("goal"),wantsChildren:readGroup("kids"),
+   values:readGroup("values"),interests:readGroup("interests"),future:$("#pfut").value,denomination:readGroup("den"),churchFrequency:readGroup("freq"),prayerImportance:readGroup("prayer")?+readGroup("prayer"):null,
+   favoriteVerse:$("#pverse").value,answers,visibility:{denomination:$("#vden").checked,church_frequency:$("#vfreq").checked,prayer_importance:$("#vpr").checked,favorite_verse:true}};
+  if($("#pcity").value)body.cityKey=$("#pcity").value;
+  if(!body.displayName.trim()||!body.gender||!body.seeking||!body.cityKey)throw new Error("Preencha nome, gênero, quem você quer conhecer e cidade.");
+  await api("/api/me/profile",{method:"PUT",body});S.me=await api("/api/me");
+  if(first){S.onboarding=false;go("prefs",{prefsOnboarding:true});}else{toast("Perfil salvo.");go("me");}});};
+function drawPhotos(){const ph=S.me.profile?.photos||[];
+ $("#photos").innerHTML=ph.map(x=>`<div class="slot"><img src="${esc(x.url)}" alt="">${x.status==="pending"?'<span class="small" style="position:absolute;left:6px;bottom:4px;background:rgba(0,0,0,.6);color:#fff;border-radius:6px;padding:1px 6px">Em análise</span>':""}<button class="x" data-rm="${esc(x.id)}" aria-label="Remover foto">×</button></div>`).join("")+(ph.length<6?'<button class="slot" id="padd" style="cursor:pointer;font-size:28px;color:var(--mute)" aria-label="Adicionar foto">+</button>':"");
+ $("#photos").querySelectorAll("[data-rm]").forEach(b=>b.onclick=async()=>{try{const r=await api(`/api/me/photos/${b.dataset.rm}`,{method:"DELETE"});S.me.profile.photos=r.photos;drawPhotos();}catch(e){toast(e.message);}});
+ const a=$("#padd");if(a)a.onclick=()=>$("#pfile").click();}
+
+VIEWS.prefs=async()=>{const p=await api("/api/me/preferences");const o=S.opt;const first=S.prefsOnboarding;
+ const dist={50:"50 km",100:"100 km",300:"300 km",1000:"1000 km",5000:"Brasil todo"};
+ renderMain(`${first?"":back()}<h1>Quem você quer conhecer?</h1><p class="mute">Você pode mudar isso quando quiser.</p>
+ <div class="row"><div><label class="label" for="amin">Idade mínima</label><input class="input" id="amin" type="number" min="18" max="99" value="${p.ageMin}"></div><div><label class="label" for="amax">Idade máxima</label><input class="input" id="amax" type="number" min="18" max="99" value="${p.ageMax}"></div></div>
+ <span class="label">Distância aproximada</span>${chipGroup("dist",Object.keys(dist),String(p.maxDistanceKm),false,0,Object.values(dist))}
+ <span class="label">Intenção de relacionamento (nenhuma marcada = todas)</span>${chipGroup("goals",o.relationshipGoals,p.goals,true)}
+ <span class="label">Denominação (opcional)</span><p class="small mute">Ao filtrar, só aparecem pessoas que escolheram mostrar a denominação.</p>${chipGroup("dens",o.denominations.filter(d=>d!=="Prefiro não dizer"),p.denominations,true)}
+ <div class="err" id="err"></div><button class="btn" id="save">${first?"Começar a conhecer pessoas":"Salvar"}</button>`);
+ if(!first)wireBack("me");
+ const b=$("#save");b.onclick=busy(b,async()=>{await api("/api/me/preferences",{method:"PUT",body:{ageMin:+$("#amin").value,ageMax:+$("#amax").value,maxDistanceKm:+(readGroup("dist")||300),goals:readGroup("goals"),denominations:readGroup("dens")}});
+  S.prefsOnboarding=false;S.queue=null;go("discover");});};
+
+// ---------- Descobrir ----------
+VIEWS.discover=async()=>{
+ $("#topRight").innerHTML=`<button class="iconbtn" id="bell" aria-label="Notificações" style="position:relative">🔔${S.unread?'<span style="position:absolute;top:2px;right:2px;width:8px;height:8px;border-radius:50%;background:var(--gold)"></span>':""}</button><button class="iconbtn" id="flt" aria-label="Preferências">⚙</button>`;
+ $("#bell").onclick=()=>go("notifications");$("#flt").onclick=()=>go("prefs",{prefsOnboarding:false});
+ if(!S.queue){renderMain(`<p class="mute">Buscando pessoas…</p>`);
+  try{S.queue=(await api("/api/discover")).profiles;}catch(e){if(e.code==="profile_incomplete")return go("edit",{onboarding:true});return renderMain(`<div class="notice warn">${esc(e.message)}</div><button class="btn" id="rt">Tentar de novo</button>`,()=>$("#rt").onclick=()=>render());}}
+ if(S.view!=="discover")return;
+ const verify="";
+ const [p,next]=S.queue;
+ if(!p){renderMain(`${verify}<div class="panel" style="margin-top:12px"><h1>Por hoje é isso</h1><p class="mute">Você viu todas as pessoas dentro das suas preferências. Ampliar a distância ou a faixa etária pode trazer novas sugestões. Convide amigos cristãos solteiros para o app!</p>
+  <button class="btn" id="pf">Ajustar preferências</button><button class="btn ghost" id="rl">Atualizar</button></div>`);$("#pf").onclick=()=>go("prefs",{prefsOnboarding:false});$("#rl").onclick=()=>{S.queue=null;render();};wireResend();return;}
+ renderMain(`${verify}<div class="deck" id="stack">${next?cardHTML(next,true):""}${cardHTML(p,false)}
+ <div class="actions"><button class="round pass" id="bpass" aria-label="Passar">✕</button><button class="round gold" id="blike" aria-label="Curtir">♥</button><button class="round sm" id="binfo" aria-label="Ver perfil completo">↑</button></div></div>`);
+ wireResend();
+ const card=$("#stack .card:not(.back)");const act=(a)=>decide(p,a,card);
+ $("#bpass").onclick=()=>act("pass");$("#blike").onclick=()=>act("like");
+ const open=()=>go("profile",{profileId:p.id,from:"discover"});$("#binfo").onclick=open;card.querySelector(".more").onclick=e=>{e.stopPropagation();open();};
+ photoNav(card,p);
+ card.querySelector(".aff").onclick=e=>{e.stopPropagation();sheet(`<h2 style="margin-top:0">Por que esta sugestão?</h2>${p.reasons.length?p.reasons.map(w=>`<p>• ${esc(w)}</p>`).join(""):"<p>Vocês estão dentro das preferências um do outro.</p>"}<p class="small mute">O índice usa só o que vocês declararam no perfil. Ele não prevê o futuro de um relacionamento.</p><button class="btn" data-close>Entendi</button>`);};
+ swipe(card,act);};
+function wireResend(){const r=$("#rs");if(r)r.onclick=async()=>{try{await api("/api/auth/resend-verification",{method:"POST",body:{}});toast("Enviamos um novo link para seu e-mail.");}catch(e){toast(e.message);}};}
+function cardHTML(p,isBack){const ph=p.photos||[];return `<div class="card ${isBack?"back":""}">${ph.length?`<img class="ph" src="${esc(ph[0])}" alt="">`:`<div class="mono">${esc(initials(p.name))}</div>`}<div class="shade"></div>
+ ${!isBack&&ph.length>1?`<div class="bars">${ph.map((_,i)=>`<i class="${i===0?"on":""}"></i>`).join("")}</div>`:""}
+ ${isBack?"":`<button class="aff" style="top:${ph.length>1?22:14}px">Afinidade ${p.compatibility}% ⓘ</button><div class="stamp like">CURTIR</div><div class="stamp pass">PASSAR</div><button class="more" aria-label="Ver perfil completo">ⓘ</button>`}
+ <div class="info"><div class="name">${esc(p.name)} <span style="font-family:var(--body);font-weight:400;font-size:26px">${esc(p.age)}</span></div><div class="meta">${esc([p.city&&`${p.city} – ${p.region}`,p.distance].filter(Boolean).join(" · "))}</div>
+ ${p.relationshipGoal?`<div class="goal">Busca: ${esc(p.relationshipGoal)}</div>`:""}${p.denomination?`<div class="meta">${esc(p.denomination)}</div>`:""}
+ ${p.bio?`<div class="meta" style="margin-top:6px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden">${esc(p.bio)}</div>`:""}
+ ${p.sharedInterests?.length?`<div class="chips" style="margin-top:8px;gap:6px">${p.sharedInterests.slice(0,4).map(i=>`<span class="tag">${esc(i)}</span>`).join("")}</div>`:""}
+ ${p.badges?.includes("email_verificado")?'<div class="meta" style="margin-top:6px">✓ E-mail verificado</div>':""}</div></div>`;}
+// Toque na metade esquerda/direita da foto troca de foto, como nos apps de namoro.
+function photoNav(card,p){const ph=p.photos||[];if(ph.length<2)return;let i=0;const img=card.querySelector("img.ph");const bars=card.querySelectorAll(".bars i");
+ card.addEventListener("click",e=>{if(e.target.closest("button")||card.dataset.dragged==="1")return;const r=card.getBoundingClientRect();if(e.clientY>r.bottom-r.height*.38)return;
+  i=e.clientX<r.left+r.width/2?Math.max(0,i-1):Math.min(ph.length-1,i+1);img.src=ph[i];bars.forEach((b,k)=>b.classList.toggle("on",k===i));});}
+function swipe(card,act){let x0=null,dx=0;const like=card.querySelector(".stamp.like"),pass=card.querySelector(".stamp.pass");
+ card.addEventListener("pointerdown",e=>{if(e.target.closest("button"))return;x0=e.clientX;dx=0;card.setPointerCapture(e.pointerId);card.style.transition="none";});
+ card.addEventListener("pointermove",e=>{if(x0==null)return;dx=e.clientX-x0;card.style.transform=`translateX(${dx}px) rotate(${dx/20}deg)`;like.style.opacity=Math.max(0,dx/110);pass.style.opacity=Math.max(0,-dx/110);});
+ const end=()=>{if(x0==null)return;x0=null;const th=card.offsetWidth*.28;if(dx>th)act("like");else if(dx<-th)act("pass");else{card.style.transition="transform .2s";card.style.transform="";like.style.opacity=pass.style.opacity=0;}};
+ card.addEventListener("pointerup",end);card.addEventListener("pointercancel",end);
+ card.addEventListener("click",e=>{card.dataset.dragged=Math.abs(dx)>6?"1":"0";if(Math.abs(dx)>6){e.stopPropagation();e.preventDefault();}},true);}
+async function decide(p,action,card){if(action==="like")S.likedAt=Date.now();
+ if(card){card.style.transition="transform .22s ease-in";card.style.transform=`translateX(${action==="like"?140:-140}%) rotate(${action==="like"?14:-14}deg)`;}
+ try{const r=await api("/api/swipes",{method:"POST",body:{toUserId:p.id,action}});S.queue=S.queue.filter(x=>x.id!==p.id);
+  if(r.matched)return matchModal(r.matchId,p);}
+ catch(e){toast(e.message);if(e.code!=="daily_like_limit")S.queue=S.queue.filter(x=>x.id!==p.id);}
+ setTimeout(()=>{if(S.view==="discover")render();},180);}
+function matchModal(matchId,p){const me=S.me.profile;
+ $("#overlay").innerHTML=`<div class="match-bg" role="dialog" aria-label="Combinação"><div style="max-width:360px">
+ <h1>Vocês se curtiram</h1><p style="color:#C9D0E2">Você e ${esc(p.name)} demonstraram interesse um no outro. Que tal começar com uma pergunta gentil?</p>
+ <div style="display:flex;justify-content:center;margin:20px 0">${avatar(me.displayName,me.photos?.[0]?.url,84)}<div style="margin-left:-14px">${avatar(p.name,p.photos?.[0],84)}</div></div>
+ <button class="btn gold" id="mgo">Enviar mensagem</button><button class="btn ghost" id="mx" style="color:#fff;border-color:#4A5B8C">Continuar conhecendo pessoas</button></div></div>`;
+ $("#mgo").onclick=()=>{closeSheet();go("chat",{matchId});};$("#mx").onclick=()=>{closeSheet();render();};}
+
+// ---------- Perfil completo ----------
+VIEWS.profile=async()=>{renderMain(`<p class="mute">Carregando…</p>`);let p;
+ try{p=await api(`/api/users/${S.profileId}`);}catch(e){return renderMain(`${back()}<div class="notice">${esc(e.message)}</div>`,()=>wireBack(S.from||"discover"));}
+ if(S.view!=="profile")return;const self=p.id===S.me.id;
+ if(!self){$("#topRight").innerHTML=`<button class="iconbtn" id="more" aria-label="Denunciar ou bloquear">⋯</button>`;$("#more").onclick=()=>reportSheet(p.id,p.name,[]);}
+ renderMain(`${back()}${p.photos.length?`<div style="display:flex;gap:8px;overflow-x:auto;scroll-snap-type:x mandatory">${p.photos.map(u=>`<img src="${esc(u)}" alt="" style="width:100%;flex:none;aspect-ratio:3/4;object-fit:cover;scroll-snap-align:start;border-radius:18px">`).join("")}</div>`:`<div class="card" style="position:relative;height:220px"><div class="mono">${esc(initials(p.name))}</div></div>`}
+ <h1 style="margin-top:14px">${esc(p.name)}, ${esc(p.age)}</h1><p class="mute">${esc([p.city&&`${p.city} – ${p.region}`,p.distance].filter(Boolean).join(" · "))}</p>
+ ${p.badges.includes("email_verificado")?'<p class="small mute">✓ E-mail verificado (não é verificação de identidade)</p>':""}
+ ${self?'<div class="notice">É assim que outras pessoas veem seu perfil.</div>':""}
+ ${p.reasons?.length?`<div class="panel" style="background:var(--gold-soft);border-color:var(--gold-soft)"><b>Afinidade declarada: ${p.compatibility}%</b>${p.reasons.map(w=>`<div>• ${esc(w)}</div>`).join("")}</div>`:""}
+ ${p.bio?`<h2>Sobre</h2><p>${esc(p.bio)}</p>`:""}
+ <h2>Relacionamento</h2>${p.relationshipGoal?`<p>Procura: ${esc(p.relationshipGoal)}</p>`:""}${p.wantsChildren?`<p>Filhos: ${esc(p.wantsChildren)}</p>`:""}${p.future?`<p>${esc(p.future)}</p>`:""}
+ ${p.denomination||p.churchFrequency||p.prayerImportance||p.favoriteVerse?"<h2>Fé</h2>":""}
+ ${p.denomination?`<p>Tradição: ${esc(p.denomination)}</p>`:""}${p.churchFrequency?`<p>Participação: ${esc(p.churchFrequency)}</p>`:""}
+ ${p.prayerImportance?`<p>Oração na rotina: ${"●".repeat(p.prayerImportance)}${"○".repeat(5-p.prayerImportance)}</p>`:""}${p.favoriteVerse?`<p>Versículo favorito: ${esc(p.favoriteVerse)}</p>`:""}
+ ${p.values.length?`<h2>Valores</h2><div class="chips">${p.values.map(v=>`<span class="chip static">${esc(v)}</span>`).join("")}</div>`:""}
+ ${p.interests.length?`<h2>Interesses</h2><div class="chips">${p.interests.map(v=>`<span class="chip static ${(p.sharedInterests||[]).includes(v)?"shared":""}">${esc(v)}</span>`).join("")}</div>`:""}
+ ${p.answers.map(a=>`<div class="panel" style="margin-top:14px"><div class="small mute">${esc(a.q)}</div><div style="font-family:var(--display);font-size:18px;margin-top:4px">${esc(a.a)}</div></div>`).join("")}`);
+ wireBack(S.from||"discover");};
+
+// ---------- Conversas ----------
+VIEWS.chats=async()=>{let m,likes;try{[m,likes]=await Promise.all([api("/api/matches"),api("/api/likes/received")]);}catch(e){return renderMain(`<div class="notice warn">${esc(e.message)}</div>`);}
+ if(S.view!=="chats")return;S.unread=0;renderTabs();
+ const fresh=m.matches.filter(x=>!x.lastMessage),talks=m.matches.filter(x=>x.lastMessage);
+ renderMain(`<div class="section-t">Novas combinações</div>
+ <div class="newrow">${likes.count?`<div class="likes-tile"><div class="ring">${likes.count}</div><span>Curtiram você</span></div>`:""}
+ ${fresh.map(x=>`<button class="newm" data-m="${x.matchId}"><div class="ring">${avatar(x.person.name,x.person.photo,66)}</div><span>${esc(x.person.name)}</span></button>`).join("")}
+ ${!fresh.length&&!likes.count?'<p class="small mute" style="margin:8px 0">Quando duas pessoas se curtem, elas aparecem aqui.</p>':""}</div>
+ <div class="section-t">Mensagens</div>
+ ${talks.length?talks.map(x=>`<button class="item" data-m="${x.matchId}">${avatar(x.person.name,x.person.photo,58)}<div><div class="t">${esc(x.person.name)}${x.muted?" · silenciada":""}</div><div class="s" style="${x.unread?"color:var(--ink);font-weight:600":""}">${esc((x.lastMessage.mine?"Você: ":"")+x.lastMessage.body)}</div></div>${x.unread?`<span class="badge">${x.unread}</span>`:""}</button>`).join("")
+ :'<p class="small mute">Nenhuma conversa ainda. Toque em uma nova combinação para dizer olá. Ninguém pode mandar mensagem sem curtida mútua.</p>'}`);
+ document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>go("chat",{matchId:+b.dataset.m}));};
+let chatMsgs=[];
+VIEWS.chat=async()=>{renderMain(`<p class="mute">Carregando conversa…</p>`);let r;
+ try{r=await api(`/api/matches/${S.matchId}/messages`);}catch(e){return renderMain(`<div class="notice">${esc(e.message)}</div><button class="btn" id="bk">Voltar</button>`,()=>$("#bk").onclick=()=>go("chats"));}
+ if(S.view!=="chat")return;chatMsgs=r.messages;const p=r.person;let muted=r.muted;
+ $("#topRight").innerHTML=`<button class="iconbtn" id="more" aria-label="Opções da conversa">⋯</button>`;
+ renderMain(`<button class="chip" id="bk" style="margin-bottom:6px">‹ Conversas</button><button class="item" id="who" style="padding-top:4px">${avatar(p.name,p.photos[0],40)}<div><div class="t">${esc(p.name)}</div><div class="s">Ver perfil</div></div></button>
+ <div class="msgs" id="msgs" aria-live="polite"></div>
+ <div class="composer"><div><button class="idea" id="idea" aria-label="Ideias de perguntas">✦</button><textarea id="txt" rows="1" maxlength="1000" placeholder="Escreva com carinho…" aria-label="Mensagem"></textarea><button class="send" id="send" aria-label="Enviar">➤</button></div></div>`);
+ drawMsgs();api(`/api/matches/${S.matchId}/read`,{method:"POST",body:{}}).catch(()=>{});
+ $("#bk").onclick=()=>go("chats");$("#who").onclick=()=>go("profile",{profileId:p.id,from:"chats"});
+ const send=async()=>{const t=$("#txt");const body=t.value.trim();if(!body)return;t.value="";
+  try{const x=await api(`/api/matches/${S.matchId}/messages`,{method:"POST",body:{body}});appendMsg(x.message);}catch(e){t.value=body;toast(e.message);}};
+ $("#send").onclick=send;$("#txt").addEventListener("keydown",e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send();}});
+ $("#idea").onclick=async()=>{try{const s=await api(`/api/matches/${S.matchId}/starters`);
+  sheet(`<h2 style="margin-top:0">Ideias para conversar</h2>${s.sharedInterests.length?`<p class="small mute">Em comum: ${esc(s.sharedInterests.join(", "))}</p>`:""}${[...s.suggestions,...s.deeperQuestions.slice(0,4)].map(q=>`<button class="listrow" data-s="${esc(q)}" style="font-size:15px">${esc(q)}</button>`).join("")}<p class="small mute" style="margin-top:8px">Toque para colocar no campo. Você pode editar antes de enviar.</p>`);
+  document.querySelectorAll("[data-s]").forEach(b=>b.onclick=()=>{$("#txt").value=b.dataset.s;closeSheet();$("#txt").focus();});}catch(e){toast(e.message);}};
+ $("#more").onclick=()=>{sheet(`<button class="btn ghost" id="mu">${muted?"Ativar notificações":"Silenciar conversa"}</button><button class="btn ghost" id="un">Desfazer combinação</button><button class="btn danger" id="rep">Denunciar ou bloquear</button><button class="btn ghost" data-close>Cancelar</button>`);
+  $("#mu").onclick=async()=>{try{muted=(await api(`/api/matches/${S.matchId}/mute`,{method:"PUT",body:{muted:!muted}})).muted;closeSheet();toast(muted?"Conversa silenciada.":"Notificações ativadas.");}catch(e){toast(e.message);}};
+  $("#un").onclick=()=>{sheet(`<h2 style="margin-top:0">Desfazer combinação?</h2><p>A conversa será encerrada para os dois.</p><button class="btn danger" id="unok">Desfazer</button><button class="btn ghost" data-close>Cancelar</button>`);
+   $("#unok").onclick=async()=>{try{await api(`/api/matches/${S.matchId}`,{method:"DELETE"});closeSheet();go("chats");}catch(e){toast(e.message);}};};
+  $("#rep").onclick=()=>reportSheet(p.id,p.name,chatMsgs.filter(m=>!m.mine));};};
+function msgHTML(m){return `${(m.warnings||[]).map(w=>`<div class="alert">⚠ ${esc(w)}</div>`).join("")}<div class="bubble ${m.mine?"mine":"theirs"}" title="${esc(dt(m.createdAt).toLocaleString("pt-BR"))}">${esc(m.body)}</div>`;}
+function drawMsgs(){const box=$("#msgs");if(!box)return;box.innerHTML=chatMsgs.length?chatMsgs.map(msgHTML).join(""):`<div class="panel" style="text-align:center"><p>Comece com respeito e curiosidade.</p><p class="small mute">Toque em ✦ para ver ideias de perguntas.</p></div>`;window.scrollTo(0,document.body.scrollHeight);}
+function appendMsg(m){if(chatMsgs.some(x=>x.id===m.id))return;chatMsgs.push(m);drawMsgs();}
+
+// ---------- Denúncia e bloqueio ----------
+function reportSheet(id,name,msgs){const last=msgs.slice(-5);
+ sheet(`<h2 style="margin-top:0">Denunciar ${esc(name)}</h2><p class="small mute">A pessoa não saberá quem denunciou. Em perigo, ligue 190. Violência contra a mulher: 180.</p>
+ <label class="label" for="rr">Motivo</label><select class="input" id="rr"><option value="">Escolha</option>${REASONS.map(([k,l])=>`<option value="${k}">${esc(l)}</option>`).join("")}</select>
+ ${last.length?`<label class="label" for="rm">Mensagem (opcional)</label><select class="input" id="rm"><option value="">Nenhuma</option>${last.map(m=>`<option value="${m.id}">${esc(m.body.slice(0,60))}</option>`).join("")}</select>`:""}
+ <label class="label" for="rd">Detalhes (opcional)</label><textarea class="input" id="rd" maxlength="1000"></textarea>
+ <label class="check"><input type="checkbox" id="rb" checked><span>Também bloquear esta pessoa</span></label>
+ <div class="err" id="rerr"></div><button class="btn danger" id="rsend">Enviar denúncia</button><button class="btn ghost" id="bonly">Só bloquear</button><button class="btn ghost" data-close>Cancelar</button>`);
+ $("#rsend").onclick=async()=>{const reason=$("#rr").value;if(!reason)return $("#rerr").textContent="Escolha um motivo.";
+  try{const r=await api("/api/reports",{method:"POST",body:{userId:id,reason,details:$("#rd").value,messageId:$("#rm")?.value?+$("#rm").value:undefined,block:$("#rb").checked}});closeSheet();toast(r.message);S.queue=null;go($("#rb")?.checked!==false?"chats":S.view);}catch(e){$("#rerr").textContent=e.message;}};
+ $("#bonly").onclick=async()=>{try{await api("/api/blocks",{method:"POST",body:{userId:id}});closeSheet();toast("Pessoa bloqueada.");S.queue=null;go("chats");}catch(e){$("#rerr").textContent=e.message;}};}
+
+// ---------- Conteúdo ----------
+VIEWS.insp=async()=>{const d=await api("/api/inspiration").catch(()=>null);if(S.view!=="insp")return;
+ const K={versiculo:"Versículo",reflexao:"Reflexão",comunicacao:"Comunicação",responsabilidade:"Responsabilidade afetiva",oracao:"Oração",esperanca:"Esperança",seguranca:"Segurança"};
+ renderMain(`<h1>Inspiração</h1><p class="mute">${esc(d?.note||"")}</p>${(d?.items||[]).map(i=>`<div class="panel"><div class="kicker">${esc(K[i.kind]||i.kind)}</div><div style="font-family:var(--display);font-size:20px;margin-top:4px">${esc(i.title)}</div>${i.ref?`<div class="mute" style="font-style:italic">${esc(i.ref)}</div>`:""}<p style="margin-top:8px">${esc(i.body)}</p></div>`).join("")}`);};
+VIEWS.events=async()=>{const d=await api("/api/events").catch(e=>({error:e.message}));if(S.view!=="events")return;
+ renderMain(`<h1>Eventos</h1><p class="mute">Participar é opcional. Ninguém vê a lista de quem vai, só o número de confirmações.</p>
+ ${d.error?`<div class="notice warn">${esc(d.error)}</div>`:!d.events.length?'<p class="mute">Nenhum evento programado no momento.</p>':d.events.map(e=>{const t=dt(e.startsAt);return `<div class="panel"><div class="kicker">${esc(e.kind)}</div><div style="font-family:var(--display);font-size:20px;margin-top:4px">${esc(e.title)}</div>
+  <p class="mute">${esc(t.toLocaleDateString("pt-BR",{weekday:"long",day:"2-digit",month:"long"}))} · ${esc(t.toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"}))}<br>${esc(e.onlineUrl?"Online":[e.city,e.location].filter(Boolean).join(" · "))}</p>
+  <p>${esc(e.description)}</p><p class="small mute">${e.going} ${e.going===1?"confirmação":"confirmações"}</p>
+  <button class="btn ${e.imGoing?"ghost":""}" data-ev="${e.id}" data-on="${e.imGoing?1:0}">${e.imGoing?"Cancelar presença":"Tenho interesse"}</button>${e.onlineUrl?`<a class="btn gold" href="${esc(e.onlineUrl)}" target="_blank" rel="noopener" style="text-decoration:none">Abrir link do evento</a>`:""}</div>`;}).join("")}`);
+ document.querySelectorAll("[data-ev]").forEach(b=>b.onclick=async()=>{try{await api(`/api/events/${b.dataset.ev}/rsvp`,{method:b.dataset.on==="1"?"DELETE":"POST",body:{}});render();}catch(e){toast(e.message);}});};
+VIEWS.notifications=async()=>{const d=await api("/api/notifications").catch(()=>({notifications:[]}));if(S.view!=="notifications")return;
+ api("/api/notifications/read",{method:"POST",body:{}}).catch(()=>{});S.unread=0;
+ renderMain(`${back()}<h1>Notificações</h1>${d.notifications.length?d.notifications.map(n=>`<button class="item" ${n.data.matchId?`data-m="${n.data.matchId}"`:""}><div><div class="t">${n.kind==="match"?`Você e ${esc(n.data.name)} se curtiram`:n.kind==="message"?`Nova mensagem de ${esc(n.data.name)}`:"Atualização"}</div><div class="s">${esc(dt(n.createdAt).toLocaleString("pt-BR"))}</div></div>${n.read?"":'<span class="badge">nova</span>'}</button>`).join(""):'<p class="mute">Nada por aqui ainda.</p>'}`);
+ wireBack("discover");document.querySelectorAll("[data-m]").forEach(b=>b.onclick=()=>go("chat",{matchId:+b.dataset.m}));};
+
+// ---------- Conta ----------
+VIEWS.me=()=>{const p=S.me.profile;
+ renderMain(`<div style="display:flex;align-items:center;gap:14px;margin:6px 0 10px">${avatar(p.displayName,p.photos?.[0]?.url,72)}<div><h1 style="margin:0">${esc(p.displayName)}</h1><div class="mute">${esc(p.city?`${p.city} – ${p.region}`:"")}</div></div></div>
+ ${!S.me.emailVerified?'<div class="notice">Seu e-mail ainda não foi confirmado. <button class="chip" id="rs">Reenviar link</button></div>':""}
+ <button class="listrow" data-v="edit">Editar perfil e fotos <span>›</span></button>
+ <button class="listrow" data-v="preview">Ver meu perfil como os outros veem <span>›</span></button>
+ <button class="listrow" data-v="prefs">Preferências de descoberta <span>›</span></button>
+ <button class="listrow" data-v="privacy">Privacidade e notificações <span>›</span></button>
+ <button class="listrow" data-v="blocked">Pessoas bloqueadas <span>›</span></button>
+ <button class="listrow" data-v="premium">Premium <span>›</span></button>
+ <button class="listrow" data-v="help">Central de ajuda <span>›</span></button>
+ ${S.me.role!=="user"?'<a class="listrow" href="/admin" style="text-decoration:none;color:inherit">Painel de moderação <span>›</span></a>':""}
+ <button class="listrow" data-v="logout">Sair <span>›</span></button>
+ <button class="listrow danger" data-v="delete">Excluir conta e dados <span>›</span></button>
+ <p class="small mute" style="margin-top:16px"><a href="/termos" style="color:inherit">Termos de Uso e Política de Privacidade</a></p>`);
+ wireResend();
+ document.querySelectorAll("[data-v]").forEach(b=>b.onclick=()=>{const v=b.dataset.v;
+  if(v==="preview")go("profile",{profileId:S.me.id,from:"me"});else if(v==="logout")logout();else if(v==="help")helpSheet();
+  else if(v==="edit")go("edit",{onboarding:false});else if(v==="prefs")go("prefs",{prefsOnboarding:false});else go(v);});};
+async function helpSheet(){const d=await api("/api/help").catch(()=>({faq:[]}));
+ sheet(`<h2 style="margin-top:0">Central de ajuda</h2>${d.faq.map(f=>`<details style="border-bottom:1px solid var(--line);padding:10px 0"><summary style="cursor:pointer;font-weight:700">${esc(f.q)}</summary><p style="margin-top:6px">${esc(f.a)}</p></details>`).join("")}
+ ${d.contact?`<p class="small mute" style="margin-top:12px">Contato: ${esc(d.contact)}</p>`:""}<p class="small mute">Em situação de risco, ligue 190. Violência contra a mulher: 180.</p><button class="btn" data-close>Fechar</button>`);}
+VIEWS.privacy=()=>{const s=S.me.settings||{},v=S.me.profile.visibility||{};
+ renderMain(`${back()}<h1>Privacidade</h1>
+ <label class="check"><input type="checkbox" id="disc" ${s.showInDiscovery!==false?"checked":""}><span>Aparecer para novas pessoas<br><span class="small mute">Desligado, você some da descoberta e mantém suas conversas.</span></span></label>
+ <h2>O que aparece no meu perfil</h2>
+ <label class="check"><input type="checkbox" id="v1" ${v.denomination?"checked":""}><span>Denominação</span></label>
+ <label class="check"><input type="checkbox" id="v2" ${v.church_frequency?"checked":""}><span>Frequência na igreja</span></label>
+ <label class="check"><input type="checkbox" id="v3" ${v.prayer_importance?"checked":""}><span>Importância da oração</span></label>
+ <label class="check"><input type="checkbox" id="v4" ${v.favorite_verse!==false?"checked":""}><span>Versículo favorito</span></label>
+ <h2>Notificações</h2>
+ <label class="check"><input type="checkbox" id="n1" ${s.notifyMatches!==false?"checked":""}><span>Novas combinações</span></label>
+ <label class="check"><input type="checkbox" id="n2" ${s.notifyMessages!==false?"checked":""}><span>Novas mensagens</span></label>
+ <p class="small mute" style="margin-top:10px">Nunca mostramos seu e-mail, sua data de nascimento nem sua localização exata. Não enviamos notificações de marketing.</p>
+ <div class="err" id="err"></div><button class="btn" id="save">Salvar</button>`);wireBack("me");
+ const b=$("#save");b.onclick=busy(b,async()=>{await api("/api/me/settings",{method:"PUT",body:{showInDiscovery:$("#disc").checked,notifyMatches:$("#n1").checked,notifyMessages:$("#n2").checked}});
+  await api("/api/me/profile",{method:"PUT",body:{visibility:{denomination:$("#v1").checked,church_frequency:$("#v2").checked,prayer_importance:$("#v3").checked,favorite_verse:$("#v4").checked}}});
+  S.me=await api("/api/me");toast("Privacidade salva.");go("me");});};
+VIEWS.blocked=async()=>{const d=await api("/api/blocks").catch(()=>({blocks:[]}));if(S.view!=="blocked")return;
+ renderMain(`${back()}<h1>Bloqueados</h1>${d.blocks.length?d.blocks.map(b=>`<div class="listrow" style="cursor:default"><span>${esc(b.name||"Conta")}</span><button class="chip" data-ub="${esc(b.id)}">Desbloquear</button></div>`).join(""):'<p class="mute">Você não bloqueou ninguém.</p>'}`);
+ wireBack("me");document.querySelectorAll("[data-ub]").forEach(b=>b.onclick=async()=>{await api(`/api/blocks/${b.dataset.ub}`,{method:"DELETE"}).catch(e=>toast(e.message));render();});};
+VIEWS.premium=async()=>{const d=await api("/api/premium").catch(()=>null);if(S.view!=="premium"||!d)return;
+ renderMain(`${back()}<h1>Conexão de Fé Premium</h1>${d.active?'<div class="notice">Seu Premium está ativo.</div>':""}
+ <div class="panel">${d.benefits.map(b=>`<p>✦ ${esc(b)}</p>`).join("")}</div><p class="mute">${esc(d.notIncluded)}</p><div class="notice">Em breve. ${esc(d.priceNote)}</div>`);wireBack("me");};
+VIEWS.delete=()=>{renderMain(`${back()}<h1>Excluir conta e dados</h1>
+ <p>Vamos apagar definitivamente seu perfil, fotos, preferências, curtidas, combinações e mensagens enviadas.</p><p class="small mute">Denúncias envolvendo sua conta podem ser mantidas de forma mínima para proteger outras pessoas, como permite a LGPD.</p>
+ <label class="label" for="pw">Sua senha</label><input class="input" id="pw" type="password" autocomplete="current-password">
+ <label class="label" for="cf">Digite EXCLUIR para confirmar</label><input class="input" id="cf" autocomplete="off">
+ <div class="err" id="err"></div><button class="btn danger" id="del" disabled>Excluir definitivamente</button>`);wireBack("me");
+ $("#cf").oninput=e=>$("#del").disabled=e.target.value.trim().toUpperCase()!=="EXCLUIR";
+ const b=$("#del");b.onclick=busy(b,async()=>{await api("/api/me",{method:"DELETE",body:{password:$("#pw").value}});store.clear();S.token=null;S.me=null;S.ws?.close();S.ws=null;
+  renderMain(`<div class="splash"><div><h1>Conta excluída</h1><p class="mute">Seus dados foram apagados. Que Deus abençoe seu caminho.</p></div></div>`);$("#tabs").hidden=true;});};
+VIEWS.loading=()=>{};
+
+// ---------- Início ----------
+(async()=>{try{S.opt=await api("/api/options");}catch(e){return renderMain(`<div class="splash"><div><h1>Sem conexão</h1><p class="mute">${esc(e.message)}</p></div></div>`);}
+ if(!S.token)return go("intro");
+ try{await enter();}catch{logout();}})();
+})();
+</script>
+</body>
+</html>

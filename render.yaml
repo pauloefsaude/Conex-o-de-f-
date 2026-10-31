@@ -1,0 +1,39 @@
+# Publicação no Render (https://render.com) — "New > Blueprint" e escolha este repositório.
+services:
+  - type: web
+    name: conexao-de-fe
+    runtime: node
+    rootDir: server
+    plan: starter              # o disco persistente exige plano pago (≈ US$ 7/mês)
+    region: virginia
+    buildCommand: node --version
+    startCommand: npm start
+    healthCheckPath: /health
+    autoDeploy: true
+    disk:
+      name: dados
+      mountPath: /var/data
+      sizeGB: 1
+    envVars:
+      - key: NODE_VERSION
+        value: "22"
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DB_FILE
+        value: /var/data/conexao.db
+      - key: UPLOAD_DIR
+        value: /var/data/uploads
+      - key: CORS_ORIGINS
+        value: ""
+      - key: ADMIN_EMAIL        # seu e-mail para entrar no painel /admin
+        sync: false
+      - key: ADMIN_PASSWORD     # senha do painel (10+ caracteres)
+        sync: false
+      - key: RESEND_API_KEY     # opcional: e-mails de confirmação e recuperação de senha
+        sync: false
+      - key: MAIL_FROM
+        sync: false
+      - key: ANTHROPIC_API_KEY  # opcional: sugestões de biografia por IA
+        sync: false

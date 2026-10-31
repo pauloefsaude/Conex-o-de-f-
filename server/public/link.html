@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Conexão de Fé</title>
+<style>
+  :root{--navy:#0E1B3D;--gold:#C9A24B;--paper:#F7F4EE}
+  body{margin:0;font:16px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif;background:var(--navy);color:#fff;display:grid;place-items:center;min-height:100vh}
+  main{background:var(--paper);color:var(--navy);border-radius:20px;padding:32px 24px;max-width:380px;width:calc(100% - 32px);box-sizing:border-box}
+  h1{font-family:Georgia,serif;font-weight:600;margin:0 0 8px}
+  input,button{width:100%;box-sizing:border-box;font:inherit;padding:12px 14px;border-radius:12px;margin-top:10px}
+  input{border:1px solid #c9c3b6}
+  button{border:0;background:var(--navy);color:#fff;font-weight:600;cursor:pointer}
+  .msg{margin-top:14px} .err{color:#a3261b}
+</style>
+</head>
+<body>
+<main>
+  <h1>Conexão de Fé</h1>
+  <div id="app">Carregando…</div>
+</main>
+<script>
+const token = new URLSearchParams(location.search).get('token');
+const app = document.getElementById('app');
+async function call(path, body) {
+  const r = await fetch(path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+  const d = await r.json(); if (!r.ok) throw new Error(d.error || 'Erro'); return d;
+}
+if (location.pathname === '/verificar-email') {
+  call('/api/auth/verify-email', { token })
+    .then(() => app.innerHTML = '<p>E-mail confirmado. Pode voltar ao aplicativo. 🙏</p>')
+    .catch((e) => { app.textContent = e.message; app.className = 'err'; });
+} else {
+  app.innerHTML = '<p>Escolha uma nova senha (mín. 8 caracteres, com letras e números).</p><form id="f"><input type="password" id="p" autocomplete="new-password" placeholder="Nova senha" required><button>Salvar senha</button></form><div class="msg" id="m"></div>';
+  document.getElementById('f').onsubmit = async (ev) => {
+    ev.preventDefault(); const m = document.getElementById('m');
+    try { await call('/api/auth/reset-password', { token, password: document.getElementById('p').value }); m.textContent = 'Senha alterada. Entre no aplicativo com a nova senha.'; m.className = 'msg'; }
+    catch (e) { m.textContent = e.message; m.className = 'msg err'; }
+  };
+}
+</script>
+</body>
+</html>
